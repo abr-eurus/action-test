@@ -9,7 +9,7 @@ env:
   AWS_REGION: us-east-1
   
   # Prod
-  AWS_PROD_ACCOUNT_ID: "222"
+  AWS_PROD_ACCOUNT_ID: "682624655763"
   AWS_PROD_ROLE_FOR_GITHUB: scaleops-prod-github-oidc-infra-role
   
   # Dev
