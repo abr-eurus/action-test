@@ -35,7 +35,8 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.AWS_PROD_ROLE_FOR_GITHUB }}
+          # role-to-assume: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.AWS_PROD_ROLE_FOR_GITHUB }}
+          role-to-assume: arn:aws:iam::682624655763:role/scaleops-prod-github-oidc-infra-role
           aws-region: us-east-1
         # run: |
         #   echo $AWS_OIDC_ROLE
