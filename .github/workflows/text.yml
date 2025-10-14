@@ -25,7 +25,8 @@ jobs:
     name: "Start Terraform Registry ECS Service"
     runs-on: ubuntu-latest
     env:
-      AWS_OIDC_ROLE: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.AWS_PROD_ROLE_FOR_GITHUB }}
+      # AWS_OIDC_ROLE: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.AWS_PROD_ROLE_FOR_GITHUB }}
+      AWS_OIDC_ROLE: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_PROD_ACCOUNT_ID, env.AWS_PROD_ROLE_FOR_GITHUB) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
