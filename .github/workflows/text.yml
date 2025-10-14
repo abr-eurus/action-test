@@ -1,0 +1,42 @@
+name: Simple Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  
+  # Prod
+  AWS_PROD_ACCOUNT_ID: "222"
+  AWS_PROD_ROLE_FOR_GITHUB: scaleops-prod-github-oidc-infra-role
+  
+  # Dev
+  AWS_DEV_ACCOUNT_ID: "111"
+  AWS_DEV_ROLE_FOR_GITHUB: scaleops-dev-github-oidc-infra-role
+  
+  # DevOps
+  AWS_DEVOPS_ACCOUNT_ID: "111"
+  AWS_DEVOPS_ROLE_FOR_GITHUB: scaleops-dev-github-oidc-infra-role
+
+jobs:
+  Starting-terraform-Registry:
+    name: "Start Terraform Registry ECS Service"
+    runs-on: ubuntu-latest
+    env:
+      AWS_OIDC_ROLE: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.AWS_PROD_ROLE_FOR_GITHUB }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Start ECR Terraform Registry Service
+        env:
+          CLUSTER_NAME: terraform-registry
+          SERVICE_NAME: terraform-registry-ec2
+          ASG_NAME: ECS-Cluster-Terraform-Registry-ECSAutoScalingGroup-WlwGYKaIjcbA
+          WAIT_TIMEOUT: 180
+        run: |
+          echo $AWS_OIDC_ROLE
+          echo --------------
+          echo $GITHUB_ACTOR
