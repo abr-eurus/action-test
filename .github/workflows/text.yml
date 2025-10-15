@@ -32,7 +32,7 @@ jobs:
         run: |
           
           trap '
-            echo: $ERROR_LOG
+            echo $ERROR_LOG
             echo "❌ ECS update-service failed for $SERVICE_NAME"
             bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "failure" "ECS update-service failed for $SERVICE_NAME"
           ' ERR
