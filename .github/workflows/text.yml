@@ -34,10 +34,10 @@ jobs:
           trap '
             echo $ERROR_LOG
             echo "❌ ECS update-service failed for $SERVICE_NAME"
-            bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "failure" "ECS update-service failed for $SERVICE_NAME"
+            # bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "failure" "ECS update-service failed for $SERVICE_NAME"
           ' ERR
 
-          ERROR_LOG=$(ls 324325 2>&1 >/dev/null)
+          ERROR_LOG=$(echo 123 2>&1 >/dev/null)
           
           trap - ERR
   # start-terraform-registry:
