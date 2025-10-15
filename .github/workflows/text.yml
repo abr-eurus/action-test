@@ -29,17 +29,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Step 1 - Build
-        run: |
-          
-          trap '
-            echo $ERROR_LOG
-            echo "❌ ECS update-service failed for $SERVICE_NAME"
-            # bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "failure" "ECS update-service failed for $SERVICE_NAME"
-          ' ERR
+        run: ls 32432
 
-          ERROR_LOG=$(echo 123 2>&1 >/dev/null)
-          
-          trap - ERR
+      - name: Step 2 - Test
+        run: echo "Running tests..."
+
+      - name: Step 3 - Only runs if all previous steps succeeded
+        if: ${{ success() }}
+        run: echo "✅ All previous steps succeeded. Running this step..."
   # start-terraform-registry:
   #   name: "Start Terraform Registry ECS Service"
   #   runs-on: ubuntu-24.04
@@ -88,14 +85,15 @@ jobs:
 
   #         echo "🔹 Starting ECS Service for Terraform Registry..."
   #         trap '
+  #           echo $ERROR_LOG
   #           echo "❌ ECS update-service failed for $SERVICE_NAME"
   #           bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "failure" "ECS update-service failed for $SERVICE_NAME"
   #         ' ERR
 
-  #         aws ecs update-service \
-  #           --cluster $CLUSTER_NAME \
-  #           --service $SERVICE_NAME \
-  #           --desired-count 1
+  #         ERROR_LOG=$(aws ecs update-service \
+  #           --cluster "$CLUSTER_NAME" \
+  #           --service "$SERVICE_NAME" \
+  #           --desired-count 1 2>&1 >/dev/null)
           
   #         trap - ERR
 
