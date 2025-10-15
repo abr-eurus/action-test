@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   AWS_REGION: us-east-1
   
@@ -21,24 +25,79 @@ env:
   AWS_DEVOPS_ROLE_FOR_GITHUB: scaleops-dev-github-oidc-infra-role
 
 jobs:
-  Starting-terraform-Registry:
+  start-terraform-registry:
     name: "Start Terraform Registry ECS Service"
-    runs-on: ubuntu-latest
-    # env:
-    #   AWS_OIDC_ROLE: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.AWS_PROD_ROLE_FOR_GITHUB }}
-      # AWS_OIDC_ROLE: ${{ format('arn:aws:iam::{0}:role/{1}', env.AWS_PROD_ACCOUNT_ID, env.AWS_PROD_ROLE_FOR_GITHUB) }}
+    runs-on: ubuntu-24.04
+    env:
+      ENV_BRANCH: us-east-1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ env.ENV_BRANCH }}
+      
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          # role-to-assume: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.AWS_PROD_ROLE_FOR_GITHUB }}
-          role-to-assume: arn:aws:iam::682624655763:role/scaleops-prod-github-oidc-infra-role
-          aws-region: us-east-1
-        # run: |
-        #   echo $AWS_OIDC_ROLE
-        #   echo --------------
-        #   echo $GITHUB_ACTOR
+          # NOTE: Use the production IAM role because the Terraform registry is hosted in the prod AWS account only
+          role-to-assume: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.AWS_PROD_ROLE_FOR_GITHUB }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Increase ASG Capacity for Terraform Registry
+        env:
+          ASG_NAME: ECS-Cluster-Terraform-Registry-ECSAutoScalingGroup-WlwGYKaIjcbA
+        run: |
+          set -euo pipefail
+
+          echo "🔹 Increasing ASG Capacity for Terraform Registry..."
+          trap '
+            echo "❌ ASG update-auto-scaling-group failed for $ASG_NAME"
+            # bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "failure" "ASG update-auto-scaling-group failed for $ASG_NAME"
+          ' ERR
+
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name $ASG_NAME \
+            --min-size 1 --max-size 1 --desired-capacity 1
+          
+          trap - ERR
+
+          echo "✅ ASG '$ASG_NAME' updated successfully: min=1, max=1, desired=1"
+      
+      # - name: Start ECS Service for Terraform Registry
+      #   env:
+      #     CLUSTER_NAME: terraform-registry
+      #     SERVICE_NAME: terraform-registry-ec2
+      #     WAIT_TIMEOUT: 180
+      #   run: |
+      #     set -euo pipefail
+
+      #     echo "🔹 Starting ECS Service for Terraform Registry..."
+      #     trap '
+      #       echo "❌ ECS update-service failed for $SERVICE_NAME"
+      #       bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "failure" "ECS update-service failed for $SERVICE_NAME"
+      #     ' ERR
+
+      #     aws ecs update-service \
+      #       --cluster $CLUSTER_NAME \
+      #       --service $SERVICE_NAME \
+      #       --desired-count 1
+          
+      #     trap - ERR
+
+      #     echo " 🕒 Waiting for ECS Service to be ready..."
+      #     if ! timeout $WAIT_TIMEOUT aws ecs wait services-stable --cluster $CLUSTER_NAME --services $SERVICE_NAME; then
+      #       echo "❌ Error: ECS service did not stabilize within ${WAIT_TIMEOUT}s."
+      #       echo "🔍 ECS Events:"
+      #       aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME
+      #       echo "🔍 Running tasks:"
+      #       aws ecs list-tasks --cluster "$CLUSTER_NAME" --service-name "$SERVICE_NAME" --desired-status RUNNING
+            
+      #       bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "failure" "ECS service did not stabilize within ${WAIT_TIMEOUT}s"
+      #       exit 1
+      #     fi
+
+      # - name: abc
+      #   if: ${{ success() }}
+      #   run: |
+      #     echo "✅ Terraform Registry ECS service is up and stable."
+      #     bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "success" "Terraform Registry ECS service is up and stable"
