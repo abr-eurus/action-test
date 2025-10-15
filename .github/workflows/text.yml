@@ -32,7 +32,7 @@ jobs:
         run: echo "Building..."
 
       - name: Step 2 - Test
-        run: echo "Running tests..."
+        run: ls 439584309
 
       - name: Step 3 - Only runs if all previous steps succeeded
         if: ${{ success() }}
