@@ -29,7 +29,7 @@ jobs:
     name: "Start Terraform Registry ECS Service"
     runs-on: ubuntu-24.04
     env:
-      ENV_BRANCH: us-east-1
+      ENV_BRANCH: main
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
