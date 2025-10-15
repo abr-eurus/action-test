@@ -29,15 +29,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Step 1 - Build
-        run: echo "Building..."
+        run: |
+          
+          trap '
+            echo: $ERROR_LOG
+            echo "❌ ECS update-service failed for $SERVICE_NAME"
+            bash ./$SLACK_JOB_NOTIFICATION_SCRIPT_PATH "${{ github.job }}" "failure" "ECS update-service failed for $SERVICE_NAME"
+          ' ERR
 
-      - name: Step 2 - Test
-        run: ls 439584309
-
-      - name: Step 3 - Only runs if all previous steps succeeded
-        if: ${{ success() }}
-        run: echo "✅ All previous steps succeeded. Running this step..."
-
+          ERROR_LOG=$(ls 324325 2>&1 >/dev/null)
+          
+          trap - ERR
   # start-terraform-registry:
   #   name: "Start Terraform Registry ECS Service"
   #   runs-on: ubuntu-24.04
@@ -109,7 +111,7 @@ jobs:
   #           exit 1
   #         fi
 
-  #     - name: abc
+  #     - name: Slack Notification - Terraform Registry Service Up
   #       if: ${{ success() }}
   #       run: |
   #         echo "✅ Terraform Registry ECS service is up and stable."
